@@ -51,7 +51,10 @@ def has_used_trial(user_id):
 def deactivate_expired_users():
     data = load_data()
     now = datetime.utcnow()
-    for uid in list(data.keys()):
+    for item in data:
+    uid = item.get("user_id") or item.get("id")
+    if not uid:
+        continue
         sub_until = datetime.strptime(data[uid]["sub_until"], "%Y-%m-%d %H:%M:%S")
         if sub_until < now:
             del data[uid]
