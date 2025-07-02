@@ -98,13 +98,13 @@ async def handle_trial(message: Message):
 
 @dp.message(F.text.in_({"🔓 30 дней", "🔐 90 дней"}))
 async def handle_paid_tariffs(message: Message):
-    await message.answer("💰 Для покупки напишите админу: @your_admin")
+    await message.answer("💰 Для покупки напишите админу: @nkt_aleksandrovich")
 
 @dp.message(F.text == "📥 Инструкция")
 async def handle_instructions(message: Message):
     await message.answer(
         "📥 <b>Инструкция по подключению:</b>\n\n"
-        "1. Скачайте V2Ray клиент:\nhttps://apps.apple.com/app/id6446208239\n\n"
+        "1. Скачайте V2Ray клиент:\nhttps://apps.apple.com/ru/app/v2raytun/id6476628951\n\n"
         "2. Скопируйте ключ\n"
         "3. Вставьте в клиент\n\n"
         "🔐 Если нужна помощь — жмите 'Связь с админом'"
@@ -112,7 +112,7 @@ async def handle_instructions(message: Message):
 
 @dp.message(F.text == "📞 Связь с админом")
 async def handle_support(message: Message):
-    await message.answer("📞 Напишите администратору: @your_admin")
+    await message.answer("📞 Напишите администратору: @nkt_aleksandrovich")
 
 @dp.message(F.text == "🔁 Назад в меню")
 async def handle_back(message: Message):
