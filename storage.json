@@ -1,1 +1,8 @@
-[]
+{
+  "123456789": {
+    "subscription": "2025-07-04T21:00:00",
+    "username": "test_user",
+    "trial_used": true,
+    "v2ray_key": "vless://123456789@vpn.example.com:443?encryption=none"
+  }
+}
