@@ -14,7 +14,11 @@ from db import (
 )
 
 from keep_alive import keep_alive  # Защита от сна Replit
-
+async def main():
+    keep_alive()
+    deactive_expiried_users()
+    await dp.start_polling(bot)
+    
 API_TOKEN = "7225465758:AAHeqZWH1zzPQ9tjIqKviRtLk3x7kYaQzZU"
 MAIN_ADMIN_ID = 1467435264
 
