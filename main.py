@@ -13,12 +13,9 @@ from db import (
     delete_user, update_v2ray_key, get_v2ray_key
 )
 
-from keep_alive import keep_alive  # Защита от сна Replit
-async def main():
-    keep_alive()
-    deactive_expiried_users()
-    await dp.start_polling(bot)
-    
+from parser import get_random_key, save_valid_keys  # ⬅️ Добавлено
+from keep_alive import keep_alive  # Защита от сна на Replit
+
 API_TOKEN = "7225465758:AAHeqZWH1zzPQ9tjIqKviRtLk3x7kYaQzZU"
 MAIN_ADMIN_ID = 1467435264
 
@@ -29,7 +26,8 @@ dp = Dispatcher()
 main_menu = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="📄 Профиль"), KeyboardButton(text="💳 Купить подписку")],
-        [KeyboardButton(text="📥 Инструкция"), KeyboardButton(text="📞 Связь с админом")]
+        [KeyboardButton(text="📥 Инструкция"), KeyboardButton(text="📞 Связь с админом")],
+        [KeyboardButton(text="🌐 Получить VPN")]
     ],
     resize_keyboard=True
 )
@@ -49,6 +47,7 @@ admin_menu = ReplyKeyboardMarkup(
         [KeyboardButton(text="🗑 Удалить пользователя"), KeyboardButton(text="🔁 Рестарт бота")],
         [KeyboardButton(text="➕ Админ"), KeyboardButton(text="➖ Удалить админа")],
         [KeyboardButton(text="🔑 Обновить ключ"), KeyboardButton(text="📊 Показать ключ")],
+        [KeyboardButton(text="🌐 Получить VPN")],
         [KeyboardButton(text="🔁 Назад в меню")]
     ],
     resize_keyboard=True
@@ -85,14 +84,12 @@ async def handle_buy(message: Message):
 async def handle_trial(message: Message):
     user_id = str(message.from_user.id)
     username = message.from_user.username or "без username"
-    now = datetime.utcnow()
 
     if has_used_trial(user_id):
         await message.answer("❗️Вы уже использовали тест. Повторно его получить нельзя.")
         return
 
     expire_time = set_subscription(user_id, username, 3, trial=True)
-
     key = f"vless://{user_id}@vpn.example.com:443?encryption=none&security=tls&type=grpc&serviceName=vpn#TestVPN"
     update_v2ray_key(user_id, key)
 
@@ -125,90 +122,28 @@ async def handle_back(message: Message):
     else:
         await message.answer("↩️ Главное меню", reply_markup=main_menu)
 
-# 🔧 Админ-функции
-
-@dp.message(F.text == "👥 Пользователи")
-async def show_users(message: Message):
-    if message.from_user.id != MAIN_ADMIN_ID:
-        return
-    users = get_all_users()
-    await message.answer(f"👥 Всего пользователей: <b>{len(users)}</b>")
-
-@dp.message(F.text == "🧾 Выдать подписку")
-async def give_sub(message: Message):
-    await message.answer("✍️ Напишите в формате:\n<code>/sub ID_пользователя дней</code>")
-
-@dp.message(Command("sub"))
-async def cmd_sub(message: Message):
-    if message.from_user.id != MAIN_ADMIN_ID:
-        return
-    try:
-        _, uid, days = message.text.split()
-        expire_time = set_subscription(uid, "admin_set", int(days), trial=False)
-        await message.answer(f"✅ Подписка до: <b>{expire_time.strftime('%d.%m.%Y %H:%M')}</b>")
-    except:
-        await message.answer("❌ Ошибка. Пример: /sub 123456789 30")
-
-@dp.message(F.text == "🔑 Обновить ключ")
-async def update_key(message: Message):
-    user_id = str(message.from_user.id)
-    new_key = f"vless://{user_id}@vpn.example.com:443?security=tls#Updated"
-    update_v2ray_key(user_id, new_key)
-    await message.answer(f"🔑 Ключ обновлён:\n<code>{new_key}</code>")
-
-@dp.message(F.text == "📊 Показать ключ")
-async def show_key(message: Message):
-    user_id = str(message.from_user.id)
-    key = get_v2ray_key(user_id)
+# 🔑 Выдача VPN ключа из парсера
+@dp.message(F.text == "🌐 Получить VPN")
+async def handle_get_vpn(message: Message):
+    key = get_random_key()
     if key:
-        await message.answer(f"🔑 Ваш ключ:\n<code>{key}</code>")
+        await message.answer(f"🔑 Вот ваш VPN ключ:\n\n<code>{key}</code>")
     else:
-        await message.answer("❌ Ключ не найден.")
+        await message.answer("❌ Сейчас нет рабочих ключей.\nПопробуйте /обновить")
 
-@dp.message(F.text == "🗑 Удалить пользователя")
-async def delete_command(message: Message):
-    await message.answer("✍️ Напишите:\n<code>/del ID</code>")
-
-@dp.message(Command("del"))
-async def delete_user_cmd(message: Message):
+# 🔁 Обновление ключей (только для админа)
+@dp.message(Command("обновить"))
+async def handle_update_keys(message: Message):
     if message.from_user.id != MAIN_ADMIN_ID:
+        await message.answer("⛔ Доступ только для админа.")
         return
-    try:
-        _, uid = message.text.split()
-        delete_user(uid)
-        await message.answer(f"✅ Пользователь {uid} удалён.")
-    except:
-        await message.answer("❌ Ошибка. Пример: /del 123456789")
+    await message.answer("🔄 Обновление ключей, подождите...")
+    await save_valid_keys()
+    await message.answer("✅ Обновление завершено.")
 
-@dp.message(F.text == "🔁 Рестарт бота")
-async def restart_bot(message: Message):
-    await message.answer("🔄 Бот перезапускается...")
-    os.execl(sys.executable, sys.executable, *sys.argv)
-
-@dp.message(F.text == "➕ Админ")
-async def add_admin_cmd(message: Message):
-    await message.answer("Напиши /addadmin ID")
-
-@dp.message(Command("addadmin"))
-async def handle_add_admin(message: Message):
-    _, uid = message.text.split()
-    add_admin(uid)
-    await message.answer(f"✅ Назначен админ: {uid}")
-
-@dp.message(F.text == "➖ Удалить админа")
-async def del_admin_cmd(message: Message):
-    await message.answer("Напиши /deladmin ID")
-
-@dp.message(Command("deladmin"))
-async def handle_del_admin(message: Message):
-    _, uid = message.text.split()
-    remove_admin(uid)
-    await message.answer(f"✅ Удалён админ: {uid}")
-
-# 🔁 Главный запуск
-
+# 🔁 Запуск
 async def main():
-    keep_alive()  # Защита от сна на Replit
+    keep_alive()
     deactivate_expired_users()
     await dp.start_polling(bot)
 
