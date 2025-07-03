@@ -5,7 +5,7 @@ app = Flask('')
 
 @app.route('/')
 def home():
-    return "VPN бот работает!"
+    return "Вроде бот работает!"
 
 def run():
     app.run(host='0.0.0.0', port=8080)
