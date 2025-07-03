@@ -7,6 +7,9 @@ def fetch_links():
         "https://v2rayssr.com",
         "https://freevpn.us/v2ray",
         "https://getvmess.net",
+        "https://001-de-srv.onix-vpn.ru",
+        "https://001-hk-srv.onix-vpn.ru",
+        "https://001-lv-srv.onix-vpn.ru",
     ]
     links = []
 
