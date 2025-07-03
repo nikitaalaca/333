@@ -4,3 +4,5 @@ beautifulsoup4
 flask>=3.0.0
 python-dotenv
 requests
+flask
+aiogram==3.20.0.post0
